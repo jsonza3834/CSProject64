@@ -2,24 +2,15 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
-import scipy.io
-from scipy.io import wavfile
-
+from pydub import AudioSegment
+import os
+import scipy.io.wavfile as wavfile
 
 gfile = ''
-# create the root window
 root = tk.Tk()
 root.title('Tkinter Open File Dialog')
 root.resizable(False, False)
 root.geometry('300x150')
-
-''' 
-tkinter.filedialog.askopenfilenames(**options) 
-Create an Open dialog and  
-return the selected filename(s) that correspond to  
-existing file(s). 
-'''
-
 
 def select_file():
     global gfile
@@ -34,8 +25,6 @@ def select_file():
         filetypes=filetypes)
 
     gfile = filename
-
-    # tkinter.messagebox — Tkinter message prompts
     showinfo(
         title='Selected File',
         message=filename
@@ -51,16 +40,24 @@ def select_file():
     )
     analyze_button.pack(expand=True)
 
+def convert_to_wav(input_file):
+    if not input_file.lower().endswith(".wav"):
+        output_file = os.path.splitext(input_file)[0] + ".wav"
+        audio = AudioSegment.from_mp3(input_file)
+        audio.export(output_file, format="wav")
+        print("file was not wav, converting now...")
+        return output_file
+    return input_file
+
 def analyze_file():
-    wav_fname = gfile
+    global gfile
+    wav_fname = convert_to_wav(gfile)
     samplerate, data = wavfile.read(wav_fname)
-    print(f"number of channels = {data.shape[len(data.shape) - 1]}")
-    print(f"sample rate = {samplerate}Hz")
+    print(f"Number of channels = {data.shape[len(data.shape) - 1]}")
+    print(f"Sample rate = {samplerate}Hz")
     length = data.shape[0] / samplerate
-    print(f"length = {length}s")
+    print(f"Length = {length}s")
 
-
-# open button
 open_button = ttk.Button(
     root,
     text='Open a File',
@@ -69,6 +66,5 @@ open_button = ttk.Button(
 
 open_button.pack(expand=True)
 
-# run the application
 root.mainloop()
 
