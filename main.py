@@ -2,15 +2,27 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
-from pydub import AudioSegment
-import os
-import scipy.io.wavfile as wavfile
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import scipy.io
+from scipy.io import wavfile
+
 
 gfile = ''
+# create the root window
 root = tk.Tk()
-root.title('Tkinter Open File Dialog')
+root.title('Interactive Data Acoustic Modeling')
 root.resizable(False, False)
-root.geometry('300x150')
+root.geometry('625x800')
+
+
+''' 
+tkinter.filedialog.askopenfilenames(**options) 
+Create an Open dialog and  
+return the selected filename(s) that correspond to  
+existing file(s). 
+'''
+
 
 def select_file():
     global gfile
@@ -25,46 +37,65 @@ def select_file():
         filetypes=filetypes)
 
     gfile = filename
+
+    # tkinter.messagebox — Tkinter message prompts
     showinfo(
         title='Selected File',
         message=filename
     )
 
     gfile_label = ttk.Label(root, text=gfile)
-    gfile_label.pack(side="bottom")
+    gfile_label.grid(column=1, row=2, columnspan=2)
 
-    analyze_button = ttk.Button(
-        root,
-        text='Analyze File',
-        command=analyze_file
-    )
-    analyze_button.pack(expand=True)
-
-def convert_to_wav(input_file):
-    if not input_file.lower().endswith(".wav"):
-        output_file = os.path.splitext(input_file)[0] + ".wav"
-        audio = AudioSegment.from_mp3(input_file)
-        audio.export(output_file, format="wav")
-        print("file was not wav, converting now...")
-        return output_file
-    return input_file
 
 def analyze_file():
-    global gfile
-    wav_fname = convert_to_wav(gfile)
+    wav_fname = gfile
     samplerate, data = wavfile.read(wav_fname)
-    print(f"Number of channels = {data.shape[len(data.shape) - 1]}")
-    print(f"Sample rate = {samplerate}Hz")
-    length = data.shape[0] / samplerate
-    print(f"Length = {length}s")
 
+    gfile_label = ttk.Label(root, text=f"number of channels = {data.shape[len(data.shape) - 1]}")
+    gfile_label.grid(column=1, row=4, columnspan=2)
+
+    gfile_label = ttk.Label(root, text=f"sample rate = {samplerate}Hz")
+    gfile_label.grid(column=1, row=5, columnspan=2)
+
+    length = data.shape[0] / samplerate
+
+    gfile_label = ttk.Label(root, text=f"length = {length}s")
+    gfile_label.grid(column=1, row=6, columnspan=2)
+
+    ax.plot(data)
+    canvas.draw()
+
+# Tkinter Open button
 open_button = ttk.Button(
     root,
     text='Open a File',
     command=select_file
 )
 
-open_button.pack(expand=True)
+open_button.grid(column=1, row=1, padx=8, pady=8, sticky='w')
 
+# Tkinter Analyze button
+analyze_button = ttk.Button(
+    root,
+    text='Analyze File',
+    command=analyze_file
+)
+
+analyze_button.grid(column=2, row=1, padx=10, pady=10, sticky='e')
+
+# Plotting the Data
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.set_title('Waveform Graph')
+ax.set_xlabel('Sample')
+ax.set_ylabel('Amplitude')
+
+# Tkinter Graph
+canvas = FigureCanvasTkAgg(fig, master=root)
+canvas_widget = canvas.get_tk_widget()
+canvas_widget.grid(column=1, row=3, columnspan=2, padx=10, pady=10, sticky='nsew')
+
+
+# run the application
 root.mainloop()
 
