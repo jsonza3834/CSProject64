@@ -44,27 +44,37 @@ def select_file():
         message=filename
     )
 
-    gfile_label = ttk.Label(root, text=gfile)
-    gfile_label.grid(column=1, row=2, columnspan=2)
-
+    gfile_label.config(text=f"File Name: {filename}")
 
 def analyze_file():
+    ax.clear()
     wav_fname = gfile
     samplerate, data = wavfile.read(wav_fname)
 
-    gfile_label = ttk.Label(root, text=f"number of channels = {data.shape[len(data.shape) - 1]}")
-    gfile_label.grid(column=1, row=4, columnspan=2)
+    channels_label.config(text=f"number of channels = {data.shape[len(data.shape) - 1]}")
 
-    gfile_label = ttk.Label(root, text=f"sample rate = {samplerate}Hz")
-    gfile_label.grid(column=1, row=5, columnspan=2)
+    samplerate_label.config(text=f"sample rate = {samplerate}Hz")
 
     length = data.shape[0] / samplerate
 
-    gfile_label = ttk.Label(root, text=f"length = {length}s")
-    gfile_label.grid(column=1, row=6, columnspan=2)
+    length_label.config(text=f"length = {length}s")
 
     ax.plot(data)
     canvas.draw()
+
+
+# Labels
+gfile_label = ttk.Label(root, text="File Name :")
+gfile_label.grid(column=1, row=2, columnspan=2)
+
+channels_label = ttk.Label(root, text=f"number of channels = ")
+channels_label.grid(column=1, row=4, columnspan=2)
+
+samplerate_label = ttk.Label(root, text=f"sample rate = 0Hz")
+samplerate_label.grid(column=1, row=5, columnspan=2)
+
+length_label = ttk.Label(root, text=f"length = 0s")
+length_label.grid(column=1, row=6, columnspan=2)
 
 # Tkinter Open button
 open_button = ttk.Button(
