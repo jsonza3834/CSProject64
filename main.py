@@ -21,10 +21,6 @@ root.geometry('625x800')
 
 file_path_var = tk.StringVar()
 
-def clear_display():
-    for widget in root.winfo_children():
-        if isinstance(widget, ttk.Label):
-            widget.destroy()
 
 def select_file():
     global gfile
@@ -47,10 +43,10 @@ def select_file():
         message=filename
     )
 
-    gfile_label.config(text=f"File Name: {file_path_var}")
+    gfile_label.config(text=f"File Name: {filename}")
+
 
 def analyze_file(file_path):
-    clear_display()
     ax.clear()
     wav_fname = file_path
     with wave.open(wav_fname, 'rb') as wav_read:
@@ -61,16 +57,16 @@ def analyze_file(file_path):
 
     samplerate_label.config(text=f"sample rate = {samplerate}Hz")
 
-    length = data.shape[0] / samplerate
+    length = round(data.shape[0] / samplerate, 2)
 
     length_label.config(text=f"length = {length}s")
 
     ax.plot(data)
     canvas.draw()
 
+
 def clean_file():
     global gfile
-    clear_display()
     gfile = remove_metadata(gfile)
     gfile = handle_multi_channel(gfile)
     root.after(100, lambda: analyze_file(gfile))
@@ -78,16 +74,19 @@ def clean_file():
     
 # Labels
 gfile_label = ttk.Label(root, text="File Name :")
-gfile_label.grid(column=1, row=2, columnspan=2)
+gfile_label.grid(column=1, row=3, columnspan=2)
 
 channels_label = ttk.Label(root, text=f"number of channels = ")
-channels_label.grid(column=1, row=4, columnspan=2)
+channels_label.grid(column=1, row=5, columnspan=2)
 
 samplerate_label = ttk.Label(root, text=f"sample rate = 0Hz")
-samplerate_label.grid(column=1, row=5, columnspan=2)
+samplerate_label.grid(column=1, row=6, columnspan=2)
 
 length_label = ttk.Label(root, text=f"length = 0s")
-length_label.grid(column=1, row=6, columnspan=2)
+length_label.grid(column=1, row=7, columnspan=2)
+
+message_label = ttk.Label(root, text="")
+message_label.grid(column=1, row=8, columnspan=2)
 
 # Tkinter Open button
 open_button = ttk.Button(
@@ -96,7 +95,7 @@ open_button = ttk.Button(
     command=select_file
 )
 
-open_button.grid(column=1, row=1, padx=8, pady=8, sticky='w')
+open_button.grid(column=1, row=1, padx=8, pady=8, columnspan=2)
 
 # Tkinter Analyze button
 analyze_button = ttk.Button(
@@ -105,7 +104,7 @@ analyze_button = ttk.Button(
     command=lambda: analyze_file(gfile)
 )
 
-analyze_button.grid(column=2, row=1, padx=10, pady=10, sticky='e')
+analyze_button.grid(column=1, row=2, padx=10, pady=10, sticky='w')
 
 clean_button = ttk.Button(
     root,
@@ -122,13 +121,13 @@ ax.set_ylabel('Amplitude')
 # Tkinter Graph
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas_widget = canvas.get_tk_widget()
-canvas_widget.grid(column=1, row=3, columnspan=2, padx=10, pady=10, sticky='nsew')
+canvas_widget.grid(column=1, row=4, columnspan=2, padx=10, pady=10, sticky='nsew')
+
 
 def remove_metadata(file_path):
     try:
         audio = AudioSegment.from_file(file_path)
         metadata = audio_metadata.load(file_path)
-        print(metadata)
         if metadata.tags:
             display_message("Metadata tags found. Removing...")
             metadata.clear()  # Remove all tags
@@ -139,10 +138,10 @@ def remove_metadata(file_path):
 
     return file_path
 
+
 def handle_multi_channel(file_path):
-    with wave.open(file_path, 'rb') as wav_read:
-        channels = wav_read.getnchannels()
-        print(channels)
+    audio = AudioSegment.from_file(file_path)
+    channels = audio.channels
 
     if channels > 1:
         display_message("Multi-channel audio detected. Converting to one channel...")
@@ -151,9 +150,10 @@ def handle_multi_channel(file_path):
 
     return file_path
 
+
 def display_message(message):
-    gfile_label = ttk.Label(root, text=message)
-    gfile_label.grid(column=1, row=8, columnspan=2)
+    message_label.config(text=message)
+
 
 def convert_to_mono(input_file):
     # Read the input file as raw binary data
