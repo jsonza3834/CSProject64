@@ -10,6 +10,7 @@ import wave
 import audio_metadata
 from pydub import AudioSegment
 import numpy as np
+import tempfile
 
 gfile = ''
 global show
@@ -27,7 +28,7 @@ file_path_var = tk.StringVar()
 def select_file():
     global gfile
     filetypes = (
-        ('Sound files', '*.wav'),
+        ('Sound files', '*.wav *.m4a *.aac *.mp3'),
         ('All files', '*.*')
     )
 
@@ -144,6 +145,15 @@ intensityG_widget = intensityG.get_tk_widget()
 intensityG_widget.grid(column=3, row=4, columnspan=2, padx=10, pady=10, sticky='nsew')
 
 
+def convert_to_wav(file_path):
+    # Convert to wav format
+    audio = AudioSegment.from_file(file_path)
+    
+    if format != "wav":
+        audio.export(output_path, format="wav")
+
+    return file_path
+    
 def remove_metadata(file_path):
     try:
         audio = AudioSegment.from_file(file_path)
@@ -192,4 +202,3 @@ def convert_to_mono(input_file):
 
 
 root.mainloop()
-
