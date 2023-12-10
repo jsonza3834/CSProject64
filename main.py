@@ -18,7 +18,6 @@ gfile = ''
 global show
 global samplerate
 global data
-global target_frequency
 global spectrum
 global t
 global freqs
@@ -29,7 +28,7 @@ show = True
 root = tk.Tk()
 root.title('Interactive Data Acoustic Modeling')
 root.resizable(False, False)
-root.geometry('1250x1000')
+root.geometry('1850x1000')
 
 file_path_var = tk.StringVar()
 
@@ -42,12 +41,10 @@ def find_target_frequency(freqs):
         return x
 
 
-def frequency_check():
-    global target_frequency
+def frequency_check(target_frequency):
     global freqs
     global spectrum
     # identify a frequency to check
-    target_frequency = find_target_frequency(freqs)
     index_of_frequency = np.where(freqs == target_frequency)[0][0]
     # find sound data for a particular frequency
     data_for_frequency = spectrum[index_of_frequency]
@@ -107,40 +104,58 @@ def plot_spectogram():
 
 # calculates and plots the high frequency RT60 Graph
 def plot_high_RT60():
+    plot_RT60("High", 1000, 5000, rhtg)
+
+def plot_low_RT60():
+    plot_RT60("Low", 20, 200, rltg)
+
+def plot_middle_RT60():
+    plot_RT60("Middle", 200, 1000, rmtg)
+
+def plot_RT60(freq_range, low_freq, high_freq, graph_widget):
     global spectrum
     global t
     global freqs
-    # clears the graph data for the next graph, had issue with spectograph not going away, this fixes that
     plt.clf()
-    # plotting the RT60 graph
-    data_in_db = frequency_check()
+    # Find indices of frequencies within the specified range
+    indices = np.where((freqs >= low_freq) & (freqs <= high_freq))[0]
+    # Find the frequency with maximum intensity within the specified range
+    target_frequency_index = indices[np.argmax(np.max(spectrum[indices, :], axis=1))]
+
+    data_in_db = frequency_check(freqs[target_frequency_index])
+
+    # plots a dot at the highest frequency
+    plt.plot(t[target_frequency_index], data_in_db[target_frequency_index], 'go')
+
+    # plotting a yellow dot at the -5db mark
+    value_of_max_less_5 = data_in_db[target_frequency_index] - 5
+    value_of_max_less_5 = find_nearest_value(data_in_db, value_of_max_less_5)
+    index_of_max_less_5 = np.where(data_in_db == value_of_max_less_5)
+    plt.plot(t[index_of_max_less_5], data_in_db[index_of_max_less_5], 'yo')
+
+    # plotting a red dot at the -25db mark
+    value_of_max_less_25 = data_in_db[target_frequency_index] - 25
+    value_of_max_less_25 = find_nearest_value(data_in_db, value_of_max_less_25)
+    index_of_max_less_25 = np.where(data_in_db == value_of_max_less_25)
+    plt.plot(t[index_of_max_less_25], data_in_db[index_of_max_less_25], 'ro')
+
+    # calculating the RT20 value
+    rt20 = (t[index_of_max_less_5] - t[index_of_max_less_25])[0]
+
+    # calculating the RT60 value
+    rt60 = 3 * rt20
+
+    print(
+        f'The {freq_range} RT60 reverb time at freq {int(freqs[target_frequency_index])}Hz is {round(abs(rt60), 2)} seconds')
+
     plt.figure(2)
     plt.plot(t, data_in_db, alpha=0.7, color='#004bc6')
     plt.xlabel('Time (s)')
     plt.ylabel('Power (dB)')
-    plt.title('RT60 Graph')
-    index_of_max = np.argmax(data_in_db)
-    value_of_max = data_in_db[index_of_max]
-    # plots a dot at the highest frequency
-    plt.plot(t[index_of_max], data_in_db[index_of_max], 'go')
-    # removed usage of sliced_array because it was only given a 0
-    sliced_array = data_in_db[index_of_max]
-    value_of_max_less_5 = value_of_max - 5
-    # plotting a yellow dot at the -5db mark
-    value_of_max_less_5 = find_nearest_value(data_in_db, value_of_max_less_5) # sliced_array used prior
-    index_of_max_less_5 = np.where(data_in_db == value_of_max_less_5)
-    plt.plot(t[index_of_max_less_5], data_in_db[index_of_max_less_5], 'yo')
-    # plotting a red dot at the -25db mark
-    value_of_max_less_25 = value_of_max - 25
-    value_of_max_less_25 = find_nearest_value(data_in_db, value_of_max_less_25) # sliced_array used prior
-    index_of_max_less_25 = np.where(data_in_db == value_of_max_less_25)
-    plt.plot(t[index_of_max_less_25], data_in_db[index_of_max_less_25], 'ro')
-    # calculating the RT20 value
-    rt20 = (t[index_of_max_less_5] - t[index_of_max_less_25])[0]
-    # calculating the RT60 value
-    rt60 = 3 * rt20
-    rtg.draw()
-    print(f'The RT60 reverb time at freq {int(target_frequency)}Hz is {round(abs(rt60), 2)} seconds')
+    plt.title(f'{freq_range} RT60 Graph')
+
+    # Update the corresponding canvas widget
+    graph_widget.draw()
 
 
 # plots the waveform graph
@@ -156,20 +171,16 @@ def plot_waveform():
     canvas.draw()
 
 
-# The long function that does everything
+# analyzes the file and graphs the plots
 def analyze_file(file_path):
     global samplerate
     global data
     global channels
     # resets the graphs so that the program can be used for multiple files in the same session
     ax.clear()
-    iax.clear()
     ax.set_title('Waveform Graph')
     ax.set_xlabel('Sample')
     ax.set_ylabel('Amplitude')
-    iax.set_title('Frequency Graph')
-    iax.set_ylabel('Frequency (Hz)')
-    iax.set_xlabel('Time (s)')
     # wav information and data
     wav_fname = file_path
     with wave.open(wav_fname, 'rb') as wav_read:
@@ -179,7 +190,8 @@ def analyze_file(file_path):
     plot_waveform()
     plot_spectogram()
     plot_high_RT60()
-
+    plot_low_RT60()
+    plot_middle_RT60()
 
 def clean_file():
     global gfile
@@ -222,17 +234,18 @@ analyze_button = ttk.Button(
 
 analyze_button.grid(column=2, row=1)
 
-# intensity graph titles and labels
+# waveform graph titles and labels
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.set_title('Waveform Graph')
 ax.set_xlabel('Sample')
 ax.set_ylabel('Amplitude')
 
-# waveform graph titles and labels
+# spectogram graph titles and labels
 ifig, iax = plt.subplots(figsize=(6, 4))
 iax.set_title('Frequency Graph')
-iax.set_xlabel('Frequency (Hz)')
-iax.set_ylabel('Time (s)')
+iax.set_ylabel('Frequency (Hz)')
+iax.set_xlabel('Time (s)')
+
 
 # Waveform Graph
 canvas = FigureCanvasTkAgg(fig, master=root)
@@ -244,10 +257,20 @@ intensityG = FigureCanvasTkAgg(ifig, master=root)
 intensityG_widget = intensityG.get_tk_widget()
 intensityG_widget.grid(column=3, row=4, columnspan=2, padx=10, pady=10, sticky='nsew')
 
-# RT60 Graph
-rtg = FigureCanvasTkAgg(ifig, master=root)
-rtg_widget = rtg.get_tk_widget()
-rtg_widget.grid(column=1, row=8, columnspan=2, padx=10, pady=10, sticky='nsew')
+# RT60 High Graph
+rhtg = FigureCanvasTkAgg(ifig, master=root)
+rhtg_widget = rhtg.get_tk_widget()
+rhtg_widget.grid(column=1, row=8, columnspan=2, padx=10, pady=10, sticky='nsew')
+
+# RT60 Low Graph
+rltg = FigureCanvasTkAgg(ifig, master=root)
+rltg_widget = rltg.get_tk_widget()
+rltg_widget.grid(column=3, row=8, columnspan=2, padx=10, pady=10, sticky='nsew')
+
+# RT60 Mid Graph
+rmtg = FigureCanvasTkAgg(ifig, master=root)
+rmtg_widget = rmtg.get_tk_widget()
+rmtg_widget.grid(column=5, row=8, columnspan=2, padx=10, pady=10, sticky='nsew')
 
 
 def convert_to_wav(file_path):
