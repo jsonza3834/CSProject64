@@ -1,4 +1,3 @@
-# controller.py
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
@@ -9,11 +8,21 @@ from model import Model
 import numpy as np
 
 class Controller:
-    def __init__(self, root, model, view):
+    def __init__(self, root, model, view, output_file_path):
         self.root = root
         self.model = model
         self.view = view
+        self.output_path = output_file_path
         self.setup_callbacks()
+
+    def process_audio(self, output_path):
+        
+        audio_data = self.model.read_audio(self.view.gfile)
+        self.model.convert_to_wav(audio_data, output_path)
+        
+        wav_data = self.model.read_wav(output_path)
+        self.model.mono_channel(wav_data)
+        self.model.remove_metadata(wav_data, output_path)
 
     def setup_callbacks(self):
         self.view.open_button.config(command=self.select_file)
@@ -35,6 +44,7 @@ class Controller:
         # Update the view
         self.view.gfile_label.config(text=f"File Name: {filename}")
 
+        
         # Tkinter Analyze button
         self.view.analyze_button = ttk.Button(
             self.root,
@@ -46,23 +56,13 @@ class Controller:
 
     def analyze_file(self):
         # Call the analyze_file method from the model
-        self.model.analyze_file(self.view.gfile)
+        self.process_audio(self.output_path)
+        
+        self.model.analyze_file(self.output_path)
+
+        # Call the plot_waveform method from the view
         self.view.plot_waveform()
         self.view.count = 0
-        self.view.analyze_button.grid_forget()
+        self.view.analyze_button.grid_forget()     
 
-
-def main():
-    root = tk.Tk()
-    root.title('Interactive Data Acoustic Modeling')
-    root.resizable(False, False)
-    root.geometry('650x800')
-
-    model = Model()
-    view = View(root, model)
-    controller = Controller(root, model, view)
-
-    root.mainloop()
-
-if __name__ == "__main__":
-    main()
+        

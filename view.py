@@ -10,6 +10,7 @@ class View:
     def __init__(self, root, model):
         self.root = root
         self.model = model
+        
         self.create_widgets()
         self.count = 0
         self.target_frequency_index = 0
@@ -66,7 +67,7 @@ class View:
             command=self.swap_graphs
         )
         self.swap_graphs_button.grid(column=1, row=5, columnspan=2)
-
+        
         # Waveform Graph
         self.fig, self.ax = plt.subplots(figsize=(6, 4))
         self.ax.set_title('Waveform Graph')
@@ -128,11 +129,17 @@ class View:
             plt.clf()
             self.plot_combined()
             self.count += 1
+        
 
     def analyze_file(self):
         # Call the analyze_file method from the model
-        self.model.analyze_file(self.gfile)
+        self.controller.process_audio(self.controller.output_path)
+        
+        self.model.analyze_file(self.controller.output_path)
+
+        # Call the plot_waveform method from the view
         self.plot_waveform()
+        
         self.count = 0
         self.analyze_button.grid_forget()
 
@@ -150,7 +157,7 @@ class View:
         self.samplerate_label.config(text=f"sample rate = {self.model.samplerate}Hz")
         length = round(self.model.data.shape[0] / self.model.samplerate, 2)
         self.length_label.config(text=f"length = {length}s")
-
+        
         self.ax.plot(self.model.data)
         self.canvas.draw()
 
