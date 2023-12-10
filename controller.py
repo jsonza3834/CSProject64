@@ -1,7 +1,9 @@
 # controller.py
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
+import matplotlib.pyplot as plt
 from view import View
 from model import Model
 import numpy as np
@@ -33,24 +35,28 @@ class Controller:
         # Update the view
         self.view.gfile_label.config(text=f"File Name: {filename}")
 
+        # Tkinter Analyze button
+        self.view.analyze_button = ttk.Button(
+            self.root,
+            text='Analyze File',
+            command=self.analyze_file
+        )
+        self.view.analyze_button.grid(column=2, row=1)
+
 
     def analyze_file(self):
         # Call the analyze_file method from the model
         self.model.analyze_file(self.view.gfile)
-
-        # Call the plot_waveform method from the view
         self.view.plot_waveform()
-        self.view.plot_spectogram()
-        self.view.plot_high_rt60()
-        self.view.plot_low_rt60()
-        self.view.plot_middle_rt60()
+        self.view.count = 0
+        self.view.analyze_button.grid_forget()
 
 
 def main():
     root = tk.Tk()
     root.title('Interactive Data Acoustic Modeling')
     root.resizable(False, False)
-    root.geometry('1850x1000')
+    root.geometry('650x800')
 
     model = Model()
     view = View(root, model)
