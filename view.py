@@ -188,21 +188,21 @@ class View:
         # Find indices of frequencies within the specified range
         indices = np.where((self.model.freqs >= low_freq) & (self.model.freqs <= high_freq))[0]
         # Find the frequency with maximum intensity within the specified range
-        target_frequency_index = indices[np.argmax(np.max(self.model.spectrum[indices, :], axis=1))]
+        self.target_frequency_index = indices[np.argmax(np.max(self.model.spectrum[indices, :], axis=1))]
 
-        data_in_db = self.model.frequency_check(self.model.freqs[target_frequency_index])
+        data_in_db = self.model.frequency_check(self.model.freqs[self.target_frequency_index])
 
         # plots a dot at the highest frequency
-        plt.plot(self.model.t[target_frequency_index], data_in_db[target_frequency_index], 'go')
+        plt.plot(self.model.t[self.target_frequency_index], data_in_db[self.target_frequency_index], 'go')
 
         # plotting a yellow dot at the -5db mark
-        value_of_max_less_5 = data_in_db[target_frequency_index] - 5
+        value_of_max_less_5 = data_in_db[self.target_frequency_index] - 5
         value_of_max_less_5 = self.model.find_nearest_value(data_in_db, value_of_max_less_5)
         index_of_max_less_5 = np.where(data_in_db == value_of_max_less_5)
         plt.plot(self.model.t[index_of_max_less_5], data_in_db[index_of_max_less_5], 'yo')
 
         # plotting a red dot at the -25db mark
-        value_of_max_less_25 = data_in_db[target_frequency_index] - 25
+        value_of_max_less_25 = data_in_db[self.target_frequency_index] - 25
         value_of_max_less_25 = self.model.find_nearest_value(data_in_db, value_of_max_less_25)
         index_of_max_less_25 = np.where(data_in_db == value_of_max_less_25)
         plt.plot(self.model.t[index_of_max_less_25], data_in_db[index_of_max_less_25], 'ro')
