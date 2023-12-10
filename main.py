@@ -10,6 +10,7 @@ import wave
 import audio_metadata
 from pydub import AudioSegment
 import numpy as np
+import tempfile
 
 gfile = ''
 
@@ -28,6 +29,7 @@ root.resizable(False, False)
 root.geometry('1250x1000')
 
 file_path_var = tk.StringVar()
+
 
 # selects a frequency under 1000 kHz
 def find_target_frequency(freqs):
@@ -61,7 +63,7 @@ def find_nearest_value(array, value):
 def select_file():
     global gfile
     filetypes = (
-        ('Sound files', '*.wav'),
+        ('Sound files', '*.wav *.m4a *.aac *.mp3'),
         ('All files', '*.*')
     )
 
@@ -222,6 +224,17 @@ rtg = FigureCanvasTkAgg(ifig, master=root)
 rtg_widget = rtg.get_tk_widget()
 rtg_widget.grid(column=1, row=8, columnspan=2, padx=10, pady=10, sticky='nsew')
 
+
+def convert_to_wav(file_path):
+    # Convert to wav format
+    audio = AudioSegment.from_file(file_path)
+
+    if format != "wav":
+        audio.export(output_path, format="wav")
+
+    return file_path
+
+
 def remove_metadata(file_path):
     try:
         audio = AudioSegment.from_file(file_path)
@@ -270,4 +283,3 @@ def convert_to_mono(input_file):
 
 
 root.mainloop()
-
