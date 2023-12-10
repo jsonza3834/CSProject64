@@ -12,16 +12,50 @@ from pydub import AudioSegment
 import numpy as np
 
 gfile = ''
+
+# Fun global variables because of scopes
 global show
+global samplerate
+global data
+global target_frequency
+global freqs
 show = True
 
 # create the root window
 root = tk.Tk()
 root.title('Interactive Data Acoustic Modeling')
 root.resizable(False, False)
-root.geometry('1250x800')
+root.geometry('1250x1000')
 
 file_path_var = tk.StringVar()
+
+# selects a frequency under 1000 kHz
+def find_target_frequency(freqs):
+    for x in freqs:
+        if x > 1000:
+            break
+        return x
+
+
+def frequency_check():
+    global target_frequency
+    global freqs
+    global spectrum
+    # identify a frequency to check
+    target_frequency = find_target_frequency(freqs)
+    index_of_frequency = np.where(freqs == target_frequency)[0][0]
+    # find sound data for a particular frequency
+    data_for_frequency = spectrum[index_of_frequency]
+    # change a digital signal for a value in decibels
+    data_in_db_fun = 10 * np.log10(data_for_frequency)
+    return data_in_db_fun
+
+
+# finds the nearest values of less 5db
+def find_nearest_value(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]
 
 
 def select_file():
@@ -48,34 +82,72 @@ def select_file():
     gfile_label.config(text=f"File Name: {filename}")
 
 
+# The long function that does everything
 def analyze_file(file_path):
     global show
+    global freqs
+    global samplerate
+    global data
+    global spectrum
+    # resets the graphs so that the program can be used for multiple files in the same session
     ax.clear()
     iax.clear()
     ax.set_title('Waveform Graph')
     ax.set_xlabel('Sample')
     ax.set_ylabel('Amplitude')
     iax.set_title('Frequency Graph')
-    iax.set_xlabel('Frequency (Hz)')
-    iax.set_ylabel('Time (s)')
+    iax.set_ylabel('Frequency (Hz)')
+    iax.set_xlabel('Time (s)')
+    # wav information and data
     wav_fname = file_path
     with wave.open(wav_fname, 'rb') as wav_read:
         channels = wav_read.getnchannels()
     samplerate, data = wavfile.read(wav_fname)
+    # the spectogram graph and intensity from the samplerate and data
     spectrum, freqs, t, im = plt.specgram(data, Fs=samplerate, NFFT=1024, cmap=plt.get_cmap('autumn_r'))
+    # issue with intensity bar creation every button press, this stops that
     if show:
         cbar = plt.colorbar(im)
         cbar.set_label('Intensity (dB)')
         show = False
-
+    # drawing the intensity/spectogram graph
     intensityG.draw()
+    # clears the graph data for the next graph, had issue with spectograph not going away, this fixes that
+    plt.clf()
+    # plotting the RT60 graph
+    data_in_db = frequency_check()
+    plt.figure(2)
+    plt.plot(t, data_in_db, alpha=0.7, color='#004bc6')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Power (dB)')
+    plt.title('RT60 Graph')
+    index_of_max = np.argmax(data_in_db)
+    value_of_max = data_in_db[index_of_max]
+    # plots a dot at the highest frequency
+    plt.plot(t[index_of_max], data_in_db[index_of_max], 'go')
+    # removed usage of sliced_array because it was only given a 0
+    sliced_array = data_in_db[index_of_max]
+    value_of_max_less_5 = value_of_max - 5
+    # plotting a yellow dot at the -5db mark
+    value_of_max_less_5 = find_nearest_value(data_in_db, value_of_max_less_5) # sliced_array used prior
+    index_of_max_less_5 = np.where(data_in_db == value_of_max_less_5)
+    plt.plot(t[index_of_max_less_5], data_in_db[index_of_max_less_5], 'yo')
+    # plotting a red dot at the -25db mark
+    value_of_max_less_25 = value_of_max - 25
+    value_of_max_less_25 = find_nearest_value(data_in_db, value_of_max_less_25) # sliced_array used prior
+    index_of_max_less_25 = np.where(data_in_db == value_of_max_less_25)
+    plt.plot(t[index_of_max_less_25], data_in_db[index_of_max_less_25], 'ro')
+    # calculating the RT20 value
+    rt20 = (t[index_of_max_less_5] - t[index_of_max_less_25])[0]
+    # calculating the RT60 value
+    rt60 = 3 * rt20
+    rtg.draw()
+    print(f'The RT60 reverb time at freq {int(target_frequency)}Hz is {round(abs(rt60), 2)} seconds')
 
+    # gathering data for the waveform plot
     channels_label.config(text=f"number of channels = {channels}")
-
     samplerate_label.config(text=f"sample rate = {samplerate}Hz")
-
     length = round(data.shape[0] / samplerate, 2)
-
     length_label.config(text=f"length = {length}s")
 
     ax.plot(data)
@@ -123,11 +195,13 @@ analyze_button = ttk.Button(
 
 analyze_button.grid(column=2, row=1)
 
+# intensity graph titles and labels
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.set_title('Waveform Graph')
 ax.set_xlabel('Sample')
 ax.set_ylabel('Amplitude')
 
+# waveform graph titles and labels
 ifig, iax = plt.subplots(figsize=(6, 4))
 iax.set_title('Frequency Graph')
 iax.set_xlabel('Frequency (Hz)')
@@ -143,6 +217,10 @@ intensityG = FigureCanvasTkAgg(ifig, master=root)
 intensityG_widget = intensityG.get_tk_widget()
 intensityG_widget.grid(column=3, row=4, columnspan=2, padx=10, pady=10, sticky='nsew')
 
+# RT60 Graph
+rtg = FigureCanvasTkAgg(ifig, master=root)
+rtg_widget = rtg.get_tk_widget()
+rtg_widget.grid(column=1, row=8, columnspan=2, padx=10, pady=10, sticky='nsew')
 
 def remove_metadata(file_path):
     try:
