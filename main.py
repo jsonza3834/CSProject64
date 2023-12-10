@@ -19,7 +19,10 @@ global show
 global samplerate
 global data
 global target_frequency
+global spectrum
+global t
 global freqs
+global channels
 show = True
 
 # create the root window
@@ -84,27 +87,13 @@ def select_file():
     gfile_label.config(text=f"File Name: {filename}")
 
 
-# The long function that does everything
-def analyze_file(file_path):
+# plots the spectogram/intensity graph
+def plot_spectogram():
     global show
-    global freqs
-    global samplerate
-    global data
     global spectrum
-    # resets the graphs so that the program can be used for multiple files in the same session
-    ax.clear()
-    iax.clear()
-    ax.set_title('Waveform Graph')
-    ax.set_xlabel('Sample')
-    ax.set_ylabel('Amplitude')
-    iax.set_title('Frequency Graph')
-    iax.set_ylabel('Frequency (Hz)')
-    iax.set_xlabel('Time (s)')
-    # wav information and data
-    wav_fname = file_path
-    with wave.open(wav_fname, 'rb') as wav_read:
-        channels = wav_read.getnchannels()
-    samplerate, data = wavfile.read(wav_fname)
+    global t
+    global freqs
+    plt.clf()
     # the spectogram graph and intensity from the samplerate and data
     spectrum, freqs, t, im = plt.specgram(data, Fs=samplerate, NFFT=1024, cmap=plt.get_cmap('autumn_r'))
     # issue with intensity bar creation every button press, this stops that
@@ -114,6 +103,13 @@ def analyze_file(file_path):
         show = False
     # drawing the intensity/spectogram graph
     intensityG.draw()
+
+
+# calculates and plots the high frequency RT60 Graph
+def plot_high_RT60():
+    global spectrum
+    global t
+    global freqs
     # clears the graph data for the next graph, had issue with spectograph not going away, this fixes that
     plt.clf()
     # plotting the RT60 graph
@@ -146,6 +142,10 @@ def analyze_file(file_path):
     rtg.draw()
     print(f'The RT60 reverb time at freq {int(target_frequency)}Hz is {round(abs(rt60), 2)} seconds')
 
+
+# plots the waveform graph
+def plot_waveform():
+    global channels
     # gathering data for the waveform plot
     channels_label.config(text=f"number of channels = {channels}")
     samplerate_label.config(text=f"sample rate = {samplerate}Hz")
@@ -154,6 +154,31 @@ def analyze_file(file_path):
 
     ax.plot(data)
     canvas.draw()
+
+
+# The long function that does everything
+def analyze_file(file_path):
+    global samplerate
+    global data
+    global channels
+    # resets the graphs so that the program can be used for multiple files in the same session
+    ax.clear()
+    iax.clear()
+    ax.set_title('Waveform Graph')
+    ax.set_xlabel('Sample')
+    ax.set_ylabel('Amplitude')
+    iax.set_title('Frequency Graph')
+    iax.set_ylabel('Frequency (Hz)')
+    iax.set_xlabel('Time (s)')
+    # wav information and data
+    wav_fname = file_path
+    with wave.open(wav_fname, 'rb') as wav_read:
+        channels = wav_read.getnchannels()
+    samplerate, data = wavfile.read(wav_fname)
+
+    plot_waveform()
+    plot_spectogram()
+    plot_high_RT60()
 
 
 def clean_file():
