@@ -9,15 +9,17 @@ from scipy.io import wavfile
 import wave
 import audio_metadata
 from pydub import AudioSegment
-
+import numpy as np
 
 gfile = ''
+global show
+show = True
 
 # create the root window
 root = tk.Tk()
 root.title('Interactive Data Acoustic Modeling')
 root.resizable(False, False)
-root.geometry('625x800')
+root.geometry('1250x800')
 
 file_path_var = tk.StringVar()
 
@@ -47,11 +49,26 @@ def select_file():
 
 
 def analyze_file(file_path):
+    global show
     ax.clear()
+    iax.clear()
+    ax.set_title('Waveform Graph')
+    ax.set_xlabel('Sample')
+    ax.set_ylabel('Amplitude')
+    iax.set_title('Frequency Graph')
+    iax.set_xlabel('Frequency (Hz)')
+    iax.set_ylabel('Time (s)')
     wav_fname = file_path
     with wave.open(wav_fname, 'rb') as wav_read:
         channels = wav_read.getnchannels()
     samplerate, data = wavfile.read(wav_fname)
+    spectrum, freqs, t, im = plt.specgram(data, Fs=samplerate, NFFT=1024, cmap=plt.get_cmap('autumn_r'))
+    if show:
+        cbar = plt.colorbar(im)
+        cbar.set_label('Intensity (dB)')
+        show = False
+
+    intensityG.draw()
 
     channels_label.config(text=f"number of channels = {channels}")
 
@@ -70,8 +87,8 @@ def clean_file():
     gfile = remove_metadata(gfile)
     gfile = handle_multi_channel(gfile)
     root.after(100, lambda: analyze_file(gfile))
-    
-    
+
+
 # Labels
 gfile_label = ttk.Label(root, text="File Name :")
 gfile_label.grid(column=1, row=3, columnspan=2)
@@ -95,7 +112,7 @@ open_button = ttk.Button(
     command=select_file
 )
 
-open_button.grid(column=1, row=1, padx=8, pady=8, columnspan=2)
+open_button.grid(column=1, row=1)
 
 # Tkinter Analyze button
 analyze_button = ttk.Button(
@@ -104,24 +121,27 @@ analyze_button = ttk.Button(
     command=lambda: analyze_file(gfile)
 )
 
-analyze_button.grid(column=1, row=2, padx=10, pady=10, sticky='w')
-
-clean_button = ttk.Button(
-    root,
-    text='Clean File',
-    command=clean_file
-)
-clean_button.grid(column=2, row=2, padx=10, pady=10, sticky='e')
+analyze_button.grid(column=2, row=1)
 
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.set_title('Waveform Graph')
 ax.set_xlabel('Sample')
 ax.set_ylabel('Amplitude')
 
-# Tkinter Graph
+ifig, iax = plt.subplots(figsize=(6, 4))
+iax.set_title('Frequency Graph')
+iax.set_xlabel('Frequency (Hz)')
+iax.set_ylabel('Time (s)')
+
+# Waveform Graph
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas_widget = canvas.get_tk_widget()
 canvas_widget.grid(column=1, row=4, columnspan=2, padx=10, pady=10, sticky='nsew')
+
+# Intensity Graph
+intensityG = FigureCanvasTkAgg(ifig, master=root)
+intensityG_widget = intensityG.get_tk_widget()
+intensityG_widget.grid(column=3, row=4, columnspan=2, padx=10, pady=10, sticky='nsew')
 
 
 def remove_metadata(file_path):
@@ -169,6 +189,7 @@ def convert_to_mono(input_file):
 
         # Write audio data
         outfile.writeframes(data)
+
 
 root.mainloop()
 
