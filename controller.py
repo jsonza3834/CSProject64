@@ -16,12 +16,14 @@ class Controller:
         self.setup_callbacks()
 
     def process_audio(self, output_path):
+
         
         audio_data = self.model.read_audio(self.view.gfile)
         self.model.convert_to_wav(audio_data, output_path)
+
         
         wav_data = self.model.read_wav(output_path)
-        self.model.mono_channel(wav_data)
+        self.model.mono_channel(wav_data, output_path)
         self.model.remove_metadata(wav_data, output_path)
 
     def setup_callbacks(self):

@@ -48,12 +48,9 @@ class Model:
             print(f"Error loading wav file: {e}")
             return None
         
-    def mono_channel(self, wav_file):
-        if wav_file:
-            # Convert to one channel if multichannel
-            if wav_file.channels > 1:
-                wav_file = wav_file.set_channels(1)
-                
+    def mono_channel(self, wav_file, output_path):
+        wav_file = wav_file.set_channels(1)
+        wav_file.export(output_path, format="wav")       
             
 
     def remove_metadata(self, wav_file, output_path):
