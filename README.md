@@ -5,4 +5,4 @@ Welcome to the Interactive Data Analysis Acoustic Modeling Platform, a comprehen
 This platform is designed to enable users to seamlessly import, clean, visualize, analyze, and model data
 using scientific calculations and data visualization tools.
 
-To start, simply press the "open file" button on our platform's GUI and select a wav or mp3 file from your files. That's it, it is that simple, once a file has beem selected our platform will begin analyzing and displaying all the important data from the file. 
+To start, simply press the "open file" button on our platform's GUI and select a sound file (.wav,.mp3,.m4a,.aac) from your files...
