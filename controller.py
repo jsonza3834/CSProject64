@@ -64,6 +64,21 @@ class Controller:
 
         # Call the plot_waveform method from the view
         self.view.plot_waveform()
+
+        res = self.model.calculate_res(self.output_path)
+        self.view.res_label.config(text=f"Resonant Frequency: {res} Hz")
+
+        # Low
+        low = self.model.RT60(20,250)
+        # Mid
+        mid = self.model.RT60(250,1000)
+        # High
+        high = self.model.RT60(1000,5000)
+
+        
+        RT60DIF = self.model.RT60_dif(low,mid,high)
+        self.view.RT60dif_label.config(text=f"Difference: {RT60DIF}s")
+        
         self.view.count = 0
         self.view.analyze_button.grid_forget()     
 

@@ -21,26 +21,21 @@ class View:
         self.gfile_label = ttk.Label(self.root, text="File Name :")
         self.gfile_label.grid(column=1, row=3, columnspan=2)
 
-        self.channels_label = ttk.Label(self.root, text=f"number of channels = ")
-        self.channels_label.grid(column=1, row=6, columnspan=2)
+        
 
-        self.samplerate_label = ttk.Label(self.root, text=f"sample rate = 0Hz")
-        self.samplerate_label.grid(column=1, row=7, columnspan=2)
+        self.length_label = ttk.Label(self.root, text=f"File Length = 0s")
+        self.length_label.grid(column=1, row=6, columnspan=2)
 
-        self.length_label = ttk.Label(self.root, text=f"length = 0s")
-        self.length_label.grid(column=1, row=8, columnspan=2)
+        
+
+        self.res_label = ttk.Label(self.root, text="Resonant Frequency: ____ Hz")
+        self.res_label.grid(column=1, row=7, columnspan=2)
+
+        self.RT60dif_label = ttk.Label(self.root, text="Difference: __.__s")
+        self.RT60dif_label.grid(column=1, row=8, columnspan=2)
 
         self.message_label = ttk.Label(self.root, text="")
         self.message_label.grid(column=1, row=12, columnspan=2)
-
-        self.high_label = ttk.Label(self.root, text="High RT60 is ____Hz at __.__s")
-        self.high_label.grid(column=1, row=9, columnspan=2)
-
-        self.mid_label = ttk.Label(self.root, text="Middle RT60 is ____Hz at __.__s")
-        self.mid_label.grid(column=1, row=10, columnspan=2)
-
-        self.low_label = ttk.Label(self.root, text="Low RT60 is ____Hz at __.__s")
-        self.low_label.grid(column=1, row=11, columnspan=2)
 
         # Tkinter Open button
         self.open_button = ttk.Button(
@@ -138,7 +133,7 @@ class View:
         self.model.analyze_file(self.controller.output_path)
 
         # Call the plot_waveform method from the view
-        self.plot_waveform()
+        
         
         self.count = 0
         self.analyze_button.grid_forget()
@@ -153,10 +148,8 @@ class View:
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.grid(column=1, row=4, columnspan=2, padx=10, pady=10, sticky='nsew')
         # gathering data for the waveform plot
-        self.channels_label.config(text=f"number of channels = {self.model.channels}")
-        self.samplerate_label.config(text=f"sample rate = {self.model.samplerate}Hz")
         length = round(self.model.data.shape[0] / self.model.samplerate, 2)
-        self.length_label.config(text=f"length = {length}s")
+        self.length_label.config(text=f"File Length = {length}s")
         
         self.ax.plot(self.model.data)
         self.canvas.draw()
@@ -168,7 +161,7 @@ class View:
         cbar.set_label('Intensity (dB)')
         # drawing the intensity/spectogram graph
         plt.xlabel('Time (s)')
-        plt.ylabel('frequency (Hz)')
+        plt.ylabel('Frequency (Hz)')
         plt.title('Frequency Graph')
         self.canvas.draw()
 
@@ -176,19 +169,20 @@ class View:
     def plot_high_rt60(self):
         # RT60 High Graph
         self.plot_rt60("High", 1000, 5000, '#004bc6')
-        self.high_label.config(text=f"High RT60 is {int(self.model.freqs[self.target_frequency_index])}Hz at {round(abs(self.rt60), 2)}s")
+        #self.high_label.config(text=f"High RT60 is {int(self.model.freqs[self.target_frequency_index])}Hz at {round(abs(self.rt60), 2)}s")
         self.canvas.draw()
 
     def plot_low_rt60(self):
         # RT60 Low Graph
-        self.plot_rt60("Low", 20, 200, '#c67a00')
-        self.low_label.config(text=f"Low RT60 is {int(self.model.freqs[self.target_frequency_index])}Hz at {round(abs(self.rt60), 2)}s")
+        self.plot_rt60("Low", 20, 250, '#c67a00')
+        #self.low_label.config(text=f"Low RT60 is {int(self.model.freqs[self.target_frequency_index])}Hz at {round(abs(self.rt60), 2)}s")
         self.canvas.draw()
 
     def plot_middle_rt60(self):
         # RT60 Mid Graph
-        self.plot_rt60("Middle", 200, 1000, '#c600b6')
-        self.mid_label.config(text=f"Middle RT60 is {int(self.model.freqs[self.target_frequency_index])}Hz at {round(abs(self.rt60), 2)}s")
+        self.plot_rt60("Middle", 250, 1000, '#c600b6')
+        
+        #self.mid_label.config(text=f"Middle RT60 is Hz at {round(abs(self.rt60), 2)}s")
         self.canvas.draw()
 
     def plot_rt60(self, freq_range, low_freq, high_freq, color):

@@ -6,6 +6,7 @@ from tkinter import filedialog as fd
 import ffmpeg
 import wave
 from scipy.io import wavfile
+from scipy.signal import welch
 import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -66,7 +67,39 @@ class Model:
         self.spectrum, self.freqs, self.t, self.im = plt.specgram(self.data, Fs=self.samplerate, NFFT=1024, cmap=plt.get_cmap('autumn_r'))
 
 
-    
+    def calculate_res(self, file_path):
+        frequencies, power = welch(self.data, self.samplerate, nperseg=4096)
+        dominant = frequencies[np.argmax(power)]
+        return dominant
+
+    def RT60(self, low_freq, high_freq):
+        # Find indices of frequencies within the specified range
+        indices = np.where((self.freqs >= low_freq) & (self.freqs <= high_freq))[0]
+        # Find the frequency with maximum intensity within the specified range
+        self.target_frequency_index = indices[np.argmax(np.max(self.spectrum[indices, :], axis=1))]
+            
+        data_in_db = self.frequency_check(self.freqs[self.target_frequency_index])
+
+        value_of_max_less_5 = data_in_db[self.target_frequency_index] - 5
+        value_of_max_less_5 = self.find_nearest_value(data_in_db, value_of_max_less_5)
+        index_of_max_less_5 = np.where(data_in_db == value_of_max_less_5)
+
+        value_of_max_less_25 = data_in_db[self.target_frequency_index] - 25
+        value_of_max_less_25 = self.find_nearest_value(data_in_db, value_of_max_less_25)
+        index_of_max_less_25 = np.where(data_in_db == value_of_max_less_25)
+        
+        rt20 = (self.t[index_of_max_less_5] - self.t[index_of_max_less_25])[0]
+
+        # calculating the RT60 value
+        self.rt60 = 3 * rt20
+
+        return abs(self.rt60)
+        
+    def RT60_dif(self, low, mid, high):
+        RT60avg = (low + mid + high) / 3
+        dif = RT60avg - .5
+        return round(dif,2)
+            
     def find_target_frequency(self, freqs):
             for x in freqs:
                 if x > 1000:
