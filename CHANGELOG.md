@@ -5,6 +5,7 @@
 - Updated pyproject,toml
 - Create requirements.txt
 - Updated requirements.txt
+- Fixed bad Comments on code
 # 12/11/23
 - Added CHANGELOG.md, soundfiles of the recording, and updated README.md a little
 - Update CHANGELOG.md
