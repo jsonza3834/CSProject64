@@ -8,6 +8,7 @@ import os
 
 
 class View:
+    # Sets up tkinter, widgets, and variables
     def __init__(self, model):
         self.root = tk.Tk()
         self.root.title('Interactive Data Acoustic Modeling')
@@ -24,7 +25,7 @@ class View:
     def create_widgets(self):
         
         # Labels
-        self.gfile_label = ttk.Label(self.root, text="File Name :")
+        self.gfile_label = ttk.Label(self.root, text="File Name:")
         self.gfile_label.grid(column=1, row=3, columnspan=2)
 
         
@@ -128,6 +129,7 @@ class View:
             self.plot_high_rt60()
             self.count = 0
 
+    # Plots a waveform graph
     def plot_waveform(self):
         # Waveform Graph
         
@@ -144,10 +146,8 @@ class View:
         
         length = round(self.model.data.shape[0] / self.model.samplerate, 2)
         self.length_label.config(text=f"File Length = {length}s")
-        
-        
-        
 
+    # Plots a spectogram graph
     def plot_spectogram(self):
         plt.clf()
         # Intensity Graph
@@ -160,7 +160,7 @@ class View:
         plt.title('Frequency Graph')
         self.canvas.draw()
 
-    # calculates and plots the high frequency RT60 Graph
+    # Calculates and plots the frequenciesRT60 Graph
     def plot_high_rt60(self):
         # RT60 High Graph
         self.plot_rt60("High", 1000, 5000, '#004bc6')
@@ -177,7 +177,6 @@ class View:
         # RT60 Mid Graph
         self.plot_rt60("Middle", 250, 1000, '#c600b6')
         
-        #self.mid_label.config(text=f"Middle RT60 is Hz at {round(abs(self.rt60), 2)}s")
         self.canvas.draw()
 
     def plot_rt60(self, freq_range, low_freq, high_freq, color):
@@ -253,12 +252,13 @@ class View:
         )
         self.analyze_button.grid(column=2, row=1)
 
+    # Analyzes the file using methods from modle and controller
     def analyze_file(self):
-        # Call the analyze_file method from the model
+        # Process the audio
         self.controller.process_audio(self.controller.output_path)
-        
+        # Call the analyze_file method from the model
         self.model.analyze_file(self.controller.output_path)
 
-
+    # root.mainloop for Tkinter
     def mainloop(self):
             self.root.mainloop()
