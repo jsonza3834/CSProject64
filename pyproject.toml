@@ -1,0 +1,22 @@
+[project]
+name = "package_CSProject64"
+version = "0.0.1"
+authors = [
+{ name="Trent Anderson",
+email="trenma21@gmail.com" },
+{ name="John Paul Sonza",
+email="jpsonza@icloud.com" }, 
+{ name="Robert Grant",
+email="BradleyGrant04@Icloud.com" },
+]
+description = "A package for an Interactive Data Acoustic Modeling program."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+"Programming Language :: Python :: 3",
+"Operating System :: OS Independent",
+]
+[project.urls]
+Homepage = "https://github.com/jsonza3834/CSProject64"
+Issues =
+"https://github.com/jsonza3834/CSProject64/issues"

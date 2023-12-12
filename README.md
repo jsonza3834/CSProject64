@@ -1,0 +1,8 @@
+# Interactive Data Acoustic Modeling
+
+Welcome to the Interactive Data Analysis Acoustic Modeling Platform, a comprehensive program designed to facilitate the analysis, cleaning, and modeling of audio data. This project aims to provide a user-friendly interface for importing data from various sources, cleaning it by handling missing values and inconsistencies, and performing in-depth data analysis to uncover valuable insights. The toolkit excels in handling data formatting issues, such as converting audio files from multiple different formats to wav format, ensuring seamless integration into your analysis pipeline.
+
+This platform is designed to enable users to seamlessly import, clean, visualize, analyze, and model data
+using scientific calculations and data visualization tools.
+
+To start, simply press the "Open a File" button on our platform's GUI and select a sound file (.wav,.mp3,.m4a,.aac) from your files. Then press the "Analyze File" button to have the file analyzed and processed and spit out the data onto your screen. This data includes the files length, the resonant frequency and the difference in seconds. Now you can select the different graphs to view from the buttons under the graph. The "Intensity Graph" button displays the intensity graph, the "Waveform Graph" button displays the waveform graph, the "Combine RT60 Graphs" shows the 3 RT60 graphs in one graph, finally the "Cycle RT60 Graphs" button goes through the low, mid and high RT60 graphs.
