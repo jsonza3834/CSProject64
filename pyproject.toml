@@ -18,5 +18,4 @@ classifiers = [
 ]
 [project.urls]
 Homepage = "https://github.com/jsonza3834/CSProject64"
-Issues =
-"https://github.com/jsonza3834/CSProject64/issues"
+Issues = "https://github.com/jsonza3834/CSProject64/issues"
